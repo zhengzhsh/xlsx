@@ -24,6 +24,7 @@ type File struct {
 	Sheet          map[string]*Sheet
 	theme          *theme
 	DefinedNames   []*xlsxDefinedName
+	ActiveTab      int
 }
 
 const NoRowLimit int = -1
@@ -130,6 +131,14 @@ func (f *File) Save(path string) (err error) {
 	return target.Close()
 }
 
+func (f *File) SetSheetActive(i int) {
+	f.ActiveTab = i
+}
+
+func (f *File) SetLastSheetActive() {
+	f.ActiveTab = len(f.Sheets) - 1
+}
+
 // Write the File to io.Writer as xlsx
 func (f *File) Write(writer io.Writer) (err error) {
 	parts, err := f.MarshallParts()
@@ -150,7 +159,7 @@ func (f *File) Write(writer io.Writer) (err error) {
 	return zipWriter.Close()
 }
 
-// Add a new Sheet, with the provided name, to a File. 
+// Add a new Sheet, with the provided name, to a File.
 // The maximum sheet name length is 31 characters. If the sheet name length is exceeded an error is thrown.
 // These special characters are also not allowed: : \ / ? * [ ]
 func (f *File) AddSheet(sheetName string) (*Sheet, error) {
@@ -197,6 +206,7 @@ func (f *File) makeWorkbook() xlsxWorkbook {
 		BookViews: xlsxBookViews{
 			WorkBookView: []xlsxWorkBookView{
 				{
+					ActiveTab:            f.ActiveTab,
 					ShowHorizontalScroll: true,
 					ShowSheetTabs:        true,
 					ShowVerticalScroll:   true,
